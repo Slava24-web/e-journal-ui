@@ -1,0 +1,56 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+//        "eslint:recommended",
+//        "plugin:@typescript-eslint/recommended",
+//        "plugin:react/recommended",
+//        "airbnb",
+//        "airbnb-typescript",
+//        "plugin:import/typescript",
+//        "plugin:prettier/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "project": ["tsconfig.json"]
+    },
+    "plugins": [
+//        "@typescript-eslint",
+        "react",
+        "prettier"
+    ],
+    "rules": {
+        "react/jsx-props-no-spreading": ["warn"],
+        "jsx-a11y/interactive-supports-focus": [
+            0,
+            {
+                "tabbable": [
+                    "button",
+                    "link"
+                ]
+            }
+        ],
+//        "@typescript-eslint/consistent-type-definitions": "warn",
+//        "@typescript-eslint/dot-notation": "off",
+//        "@typescript-eslint/explicit-member-accessibility": [
+//            "off",
+//            {
+//                "accessibility": "explicit"
+//            }
+//        ],
+        "@typescript-eslint/no-use-before-define": "warn",
+        "brace-style": [
+            "warn",
+            "1tbs"
+        ],
+        "id-blacklist": "off",
+        "id-match": "off",
+        "max-len": "off",
+        "no-underscore-dangle": "off",
+        "valid-typeof": "warn"
+    }
+}

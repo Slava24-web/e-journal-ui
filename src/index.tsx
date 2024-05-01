@@ -1,16 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import './index.css';
+import { ConfigProvider } from 'antd';
+import ru from 'antd/locale/ru_RU';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+    <React.StrictMode>
+        <ConfigProvider locale={ru}>
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+        </ConfigProvider>
+    </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
