@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Popconfirm, Table, Upload, UploadProps, message } from 'antd';
 import { EditableRow, EditableCell } from '../../Components/JournalTable/EditableCell';
 import { DownloadOutlined } from '@ant-design/icons';
 import { JournalHeader } from '../../Components/JournalHeader';
+import JournalSlice from '../../store/journal/slice';
 
 type EditableTableProps = Parameters<typeof Table>[0];
 
@@ -11,6 +12,11 @@ type DataType = Record<string, string | number>
 type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>;
 
 export const Journal: React.FC = () => {
+    useEffect(() => {
+        JournalSlice.fetchAllSpecs()
+        JournalSlice.fetchAllLevels()
+    }, [])
+
     const [dataSource, setDataSource] = useState<DataType[]>([
         {
             key: '0',

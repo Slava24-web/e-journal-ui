@@ -50,7 +50,6 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
                     lesson_type_id: event.lesson_type_id,
                 } as EventInfo))
 
-            console.log("filteredByCurrentDateEvents", filteredByCurrentDateEvents)
             form.setFieldsValue({ events: filteredByCurrentDateEvents })
             setFormFields(filteredByCurrentDateEvents)
         }
