@@ -4,6 +4,11 @@ import { EditableRow, EditableCell } from '../../Components/JournalTable/Editabl
 import { DownloadOutlined } from '@ant-design/icons';
 import { JournalHeader } from '../../Components/JournalHeader';
 import JournalSlice from '../../store/journal/slice';
+import { observer } from 'mobx-react-lite';
+import { toJS } from 'mobx';
+import EventSlice from '../../store/events/slice';
+import { IStudent } from '../../store/journal/models';
+import { IEvent } from '../../store/events/models';
 
 type EditableTableProps = Parameters<typeof Table>[0];
 
@@ -11,29 +16,40 @@ type DataType = Record<string, string | number>
 
 type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>;
 
-export const Journal: React.FC = () => {
-    useEffect(() => {
-        JournalSlice.fetchAllSpecs()
-        JournalSlice.fetchAllLevels()
-    }, [])
+export const Journal: React.FC = observer(() => {
+    const storeEvents: IEvent[] = toJS(EventSlice.getCalendarEvents)
+    const studentsByGroup: IStudent[] = toJS(JournalSlice.getStudentsByGroup)
 
-    const [dataSource, setDataSource] = useState<DataType[]>([
-        {
-            key: '0',
-            name: 'Шубин Святослав Витальевич',
-        },
-        {
-            key: '1',
-            name: 'Сторчак Вадим Витальевич',
-        },
-    ]);
+    const studentsByGroupDataSource: DataType[] = studentsByGroup.map(({ id, name }) => ({
+        key: id,
+        name,
+    }))
+
+    console.log("studentsByGroup", studentsByGroup)
+
+    useEffect(() => {
+        const searchEventId = new URLSearchParams(window.location.search).get('id')
+        const eventId = searchEventId ? Number(searchEventId) : null
+
+        if (eventId) {
+            const group_id = storeEvents.find(({ id }) => eventId)?.group_id
+
+            if (group_id) {
+                JournalSlice.fetchStudentsByGroupId(group_id)
+            }
+        }
+
+        return () => {
+            JournalSlice.clearStudentsByGroup()
+        }
+    }, [window.location.search]);
 
     const [count, setCount] = useState<number>(2);
 
-    const handleDelete = (key: React.Key) => {
-        const newData = dataSource.filter((item) => item.key !== key);
-        setDataSource(newData);
-    };
+    // const handleDelete = (key: React.Key) => {
+    //     const newData = dataSource.filter((item) => item.key !== key);
+    //     setDataSource(newData);
+    // };
 
     // Столбцы по-умолчанию
     const defaultColumns: (ColumnTypes[number] & { editable?: boolean; dataIndex: string })[] = [
@@ -111,19 +127,19 @@ export const Journal: React.FC = () => {
             age: '32',
             address: `London, Park Lane no. ${count}`,
         };
-        setDataSource([...dataSource, newData]);
+        // setDataSource([...dataSource, newData]);
         setCount(count + 1);
     };
 
     const handleSave = (row: DataType) => {
-        const newData = [...dataSource];
-        const index = newData.findIndex((item) => row.key === item.key);
-        const item = newData[index];
-        newData.splice(index, 1, {
-            ...item,
-            ...row
-        });
-        setDataSource(newData);
+        // const newData = [...dataSource];
+        // const index = newData.findIndex((item) => row.key === item.key);
+        // const item = newData[index];
+        // newData.splice(index, 1, {
+        //     ...item,
+        //     ...row
+        // });
+        // setDataSource(newData);
     };
 
     // Компоненты таблицы
@@ -158,11 +174,11 @@ export const Journal: React.FC = () => {
                 components={components}
                 rowClassName={() => 'editable-row'}
                 bordered
-                dataSource={dataSource}
+                dataSource={studentsByGroupDataSource}
                 columns={columns as ColumnTypes}
                 size='small'
                 scroll={{ x: "max-content" }}
             />
         </>
     );
-};
+});

@@ -11,16 +11,21 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { EventDrawer } from '../../Components/EventDrawer';
 import EventSlice from '../../store/events/slice';
+import JournalSlice from '../../store/journal/slice'
 import { IEvent } from '../../store/events/models';
 import { observer } from 'mobx-react-lite';
-import { EventInput } from '@fullcalendar/core';
+import { EventClickArg, EventInput } from '@fullcalendar/core';
+import { toJS } from 'mobx';
+import { Identity } from '@fullcalendar/core/internal';
+import { EventInfoModal } from '../../Components/EventInfoModal/EventInfoModal';
 
+// Отображение события в календаре
 function CustomView(eventInfo: EventInput) {
     const { event } = eventInfo
 
     return (
         <>
-            <div className='view-events'>
+            <div className='view-events' style={{ overflow: 'hidden' }}>
                 &nbsp;{event._def.title} - {event._def.extendedProps.room} ауд.
             </div>
         </>
@@ -28,10 +33,12 @@ function CustomView(eventInfo: EventInput) {
 }
 
 export const Calendar = observer(() => {
-    const [openEventDrawer, setOpenEventDrawer] = useState<boolean>(false);
-    const [currentDate, setCurrentDate] = useState<string>('');
+    const [openEventDrawer, setOpenEventDrawer] = useState<boolean>(false)
+    const [currentDate, setCurrentDate] = useState<string>('')
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [currentEvent, setCurrentEvent] = useState<IEvent | null>(null)
 
-    const storeEvents = EventSlice.getCalendarEvents;
+    const storeEvents = toJS(EventSlice.getCalendarEvents)
 
     const events = storeEvents.map((event: IEvent) => ({
         title: event.title,
@@ -53,11 +60,24 @@ export const Calendar = observer(() => {
         setOpenEventDrawer(false);
     };
 
+    const handleOk = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
     // Клик по ячейке в календаре
     const clickDateHandler = (info: DateClickArg): void => {
         showDrawer();
         setCurrentDate(info.dateStr);
     };
+
+    const onEventClick = (arg: EventClickArg): void => {
+        setCurrentEvent(arg.event._def.extendedProps as IEvent)
+        setIsModalOpen(true)
+    }
 
     return (
         <>
@@ -80,6 +100,7 @@ export const Calendar = observer(() => {
                     center: 'title',
                     end: 'today prev,next'
                 }}
+                eventClick={onEventClick}
                 dateClick={clickDateHandler}
                 handleWindowResize
                 fixedWeekCount={false}
@@ -96,6 +117,13 @@ export const Calendar = observer(() => {
                 closeDrawer={closeDrawer}
                 openEventDrawer={openEventDrawer}
                 currentDate={currentDate}
+            />
+
+            <EventInfoModal
+                isModalOpen={isModalOpen}
+                handleOk={handleOk}
+                handleCancel={handleCancel}
+                currentEvent={currentEvent}
             />
         </>
     );

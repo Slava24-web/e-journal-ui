@@ -18,3 +18,17 @@ export interface ILevel {
     id: number
     name: string
 }
+
+export interface ILessonType {
+    id: number
+    name: string
+}
+
+export interface IStudent {
+    id: number
+    name: string
+    group_id: number
+    elder?: boolean
+}
+
+export type StudentInfo = Omit<IStudent, 'id'>

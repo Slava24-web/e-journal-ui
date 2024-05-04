@@ -5,8 +5,10 @@ import { Callbacks } from 'rc-field-form/lib/interface';
 import { EventInput } from '@fullcalendar/core';
 import { EventInfo, IEvent } from '../../store/events/models';
 import EventSlice from '../../store/events/slice';
+import JournalSlice from '../../store/journal/slice';
 import { observer } from 'mobx-react-lite';
 import { toJS } from 'mobx';
+import { IGroup, ILessonType } from '../../store/journal/models';
 
 type Props = {
     closeDrawer: (e: React.MouseEvent | React.KeyboardEvent) => void;
@@ -21,6 +23,8 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
     const [formFields, setFormFields] = useState<EventInfo[]>([])
 
     const storeEvents = toJS(EventSlice.getCalendarEvents)
+    const storeGroups = toJS(JournalSlice.getGroups)
+    const storeLessonTypes = toJS(JournalSlice.getLessonTypes)
 
     const currentDate_year = new Date(Date.parse(currentDate)).getFullYear()
     const currentDate_month = new Date(Date.parse(currentDate)).getMonth() + 1
@@ -166,12 +170,11 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
                                                     rules={[{ required: true, message: 'Укажите тип занятия!' }]}
                                                 >
                                                     <Select>
-                                                        <Select.Option value={1}>Лекция</Select.Option>
-                                                        <Select.Option value={2}>Практическое занятие</Select.Option>
-                                                        <Select.Option value={3}>Лабораторная работа</Select.Option>
-                                                        <Select.Option value={4}>Консультация</Select.Option>
-                                                        <Select.Option value={5}>Зачёт</Select.Option>
-                                                        <Select.Option value={6}>Экзамен</Select.Option>
+                                                        {
+                                                            storeLessonTypes.map(({ id, name }: ILessonType) => (
+                                                                <Select.Option value={id}>{name}</Select.Option>
+                                                            ))
+                                                        }
                                                     </Select>
                                                 </Form.Item>
 
@@ -183,9 +186,11 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
                                                     rules={[{ required: true, message: 'Укажите группу!' }]}
                                                 >
                                                     <Select>
-                                                        <Select.Option value={1}>209</Select.Option>
-                                                        <Select.Option value={2}>17/1</Select.Option>
-                                                        <Select.Option value={3}>27/2</Select.Option>
+                                                        {
+                                                            storeGroups.map(({ id, number }: IGroup) => (
+                                                                <Select.Option value={id}>{number}</Select.Option>
+                                                            ))
+                                                        }
                                                     </Select>
                                                 </Form.Item>
 

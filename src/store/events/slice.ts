@@ -37,7 +37,7 @@ class EventSlice {
 
     fetchUpdateEvent(eventsInfo: EventInfo[]) {
         const events: IEvent[] = eventsInfo.map((eventInfo: EventInfo) => {
-            const originalEvent = toJS(this.events).find((event: IEvent) => event.id === eventInfo.id) ?? {} as IEvent
+            const originalEvent = toJS(this.events).find(({ id }: IEvent) => id === eventInfo.id) ?? {} as IEvent
             return {
                 user_id: originalEvent.user_id,
                 id: originalEvent.id,
@@ -48,7 +48,28 @@ class EventSlice {
         const oldEvents: IEvent[] = events.filter(({ id }) => id)
         const newEvents: EventInfo[] = events.filter(({ id }) => !id)
 
-        fetchUpdateEventApi(oldEvents)
+        if (oldEvents.length) {
+            fetchUpdateEventApi(oldEvents)
+                .then(response => {
+                    if (response?.data) {
+                        this.events = response.data.events.map((event: IEventBack) => ({
+                            ...event,
+                            start_datetime: Number(parseInt(event.start_datetime)),
+                            end_datetime: Number(parseInt(event.end_datetime)),
+                        }))
+                    }
+                })
+        }
+
+        if (newEvents.length) {
+            this.fetchAddEvent(newEvents)
+        }
+    }
+
+    fetchAllEvents() {
+        const { id } = AuthSlice.userData
+
+        fetchAllEventsApi(id)
             .then(response => {
                 if (response?.data) {
                     this.events = response.data.events.map((event: IEventBack) => ({
@@ -58,23 +79,12 @@ class EventSlice {
                     }))
                 }
             })
-
-        this.fetchAddEvent(newEvents)
-    }
-
-    fetchAllEvents() {
-        const { id } = AuthSlice.userData
-
-        fetchAllEventsApi(id)
-            .then(response => {
-                if (response?.data) {
-                    console.log("response.data.events", response.data.events)
-                    this.events = response.data.events.map((event: IEventBack) => ({
-                        ...event,
-                        start_datetime: Number(parseInt(event.start_datetime)),
-                        end_datetime: Number(parseInt(event.end_datetime)),
-                    }))
-                }
+            .catch((error) => {
+                NotificationSlice.setNotificationParams({
+                    type: NotificationType.error,
+                    message: `Не удалось загрузить события календаря!`,
+                    description: error.message,
+                })
             })
     }
 

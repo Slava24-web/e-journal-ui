@@ -5,6 +5,7 @@ import { Route, Routes, NavLink } from 'react-router-dom';
 import { Calendar } from '../../Pages/Calendar';
 import { Journal } from '../../Pages/Journal';
 import EventSlice from '../../store/events/slice';
+import JournalSlice from '../../store/journal/slice';
 
 // Рабочая область (контент)
 export const Workspace = () => {
@@ -14,6 +15,10 @@ export const Workspace = () => {
 
   useEffect(() => {
       EventSlice.fetchAllEvents()
+      JournalSlice.fetchAllSpecs()
+      JournalSlice.fetchAllLevels()
+      JournalSlice.fetchAllGroups()
+      JournalSlice.fetchAllLessonTypes()
   }, []);
 
   return (
