@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Form, GetRef, Input, InputRef } from 'antd';
+import JournalSlice from '../../store/journal/slice'
 
 interface EditableRowProps {
     index: number;
@@ -52,12 +53,20 @@ export const EditableCell: React.FC<EditableCellProps> = (props) => {
 
     const save = async () => {
         try {
-            const values = await form.validateFields();
+            console.log("record", record)
+            console.log("props", props)
 
-            toggleEdit();
-            handleSave({ ...record, ...values });
+            const mark = {
+                // @ts-ignore
+                event_id: props.eventId,
+                student_id: Number(record.key),
+                mark: inputRef.current?.input?.value
+            }
+
+            toggleEdit()
+            JournalSlice.fetchAddMark(mark)
         } catch (errInfo) {
-            console.log('Save failed:', errInfo);
+            console.log('Save failed:', errInfo)
         }
     };
 
@@ -68,23 +77,22 @@ export const EditableCell: React.FC<EditableCellProps> = (props) => {
             <Form.Item
                 style={{ margin: 0 }}
                 name={dataIndex}
-                rules={[
-                    {
-                        required: true,
-                        message: `${title} is required.`
-                    }
-                ]}
             >
                 <Input ref={inputRef} onPressEnter={save} onBlur={save} />
             </Form.Item>
         ) : (
-            <div className='editable-cell-value-wrap' style={{ paddingRight: 24 }} onClick={toggleEdit}>
+            <div className='editable-cell-value-wrap' style={{ paddingRight: 24 }}>
                 {children}
             </div>
         );
     }
 
     return (
-        <td {...restProps}>{childNode}</td>
+        <td
+            {...restProps}
+            onClick={toggleEdit}
+        >
+            {childNode}
+        </td>
     )
 }

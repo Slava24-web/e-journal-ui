@@ -32,3 +32,13 @@ export interface IStudent {
 }
 
 export type StudentInfo = Omit<IStudent, 'id'>
+
+export interface IMark {
+    id: number
+    student_id: number
+    event_id: number
+    mark?: string
+    note?: string
+}
+
+export type MarkInfo = Omit<IMark, 'id'>

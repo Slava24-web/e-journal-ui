@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, Popconfirm, Table, Upload, UploadProps, message } from 'antd';
 import { EditableRow, EditableCell } from '../../Components/JournalTable/EditableCell';
 import { DownloadOutlined } from '@ant-design/icons';
@@ -7,8 +7,9 @@ import JournalSlice from '../../store/journal/slice';
 import { observer } from 'mobx-react-lite';
 import { toJS } from 'mobx';
 import EventSlice from '../../store/events/slice';
-import { IStudent } from '../../store/journal/models';
+import { IGroup, IMark, IStudent } from '../../store/journal/models';
 import { IEvent } from '../../store/events/models';
+import { padStart } from '@fullcalendar/core/internal';
 
 type EditableTableProps = Parameters<typeof Table>[0];
 
@@ -16,35 +17,59 @@ type DataType = Record<string, string | number>
 
 type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>;
 
+const getShortDate = (timestamp: number): string => {
+    return `${padStart(new Date(timestamp).getDate(), 2)}.${padStart(new Date(timestamp).getMonth() + 1, 2)}`
+}
+
 export const Journal: React.FC = observer(() => {
+    const searchEventId = new URLSearchParams(window.location.search).get('id')
+    const eventId = searchEventId ? Number(searchEventId) : null
+
+    const [currentGroup, setCurrentGroup] = useState<IGroup>()
+
+    /** Store */
     const storeEvents: IEvent[] = toJS(EventSlice.getCalendarEvents)
     const studentsByGroup: IStudent[] = toJS(JournalSlice.getStudentsByGroup)
-
-    const studentsByGroupDataSource: DataType[] = studentsByGroup.map(({ id, name }) => ({
-        key: id,
-        name,
-    }))
-
-    console.log("studentsByGroup", studentsByGroup)
+    const storeGroups = toJS(JournalSlice.getGroups)
+    const marks = toJS(JournalSlice.getMarksByEvent)
 
     useEffect(() => {
-        const searchEventId = new URLSearchParams(window.location.search).get('id')
-        const eventId = searchEventId ? Number(searchEventId) : null
-
         if (eventId) {
             const group_id = storeEvents.find(({ id }) => eventId)?.group_id
 
             if (group_id) {
+                JournalSlice.fetchMarksByEventId(eventId)
                 JournalSlice.fetchStudentsByGroupId(group_id)
+                // Текущая группа
+                setCurrentGroup(storeGroups.find(({ id }) => id === group_id))
             }
         }
 
         return () => {
             JournalSlice.clearStudentsByGroup()
+            JournalSlice.clearMarksByEvent(Number(eventId))
         }
-    }, [window.location.search]);
+    }, []);
 
-    const [count, setCount] = useState<number>(2);
+    // Все события по текущей группе
+    const eventsByCurrentGroup = storeEvents.filter(({ group_id }) => group_id === currentGroup?.id)
+
+    // Записи таблицы
+    // @ts-ignore
+    const studentsByGroupDataSource: DataType[] = studentsByGroup.map(({ id, name }) => {
+        const lessonMarks: Record<string, string> = eventsByCurrentGroup.reduce((result, event: IEvent) => {
+            return {
+                ...result,
+                [getShortDate(event.start_datetime)]: marks?.[event.id]?.find(({ event_id, student_id }: IMark) => event_id === event.id && student_id === id)?.mark
+            }
+        }, {})
+
+        return {
+            key: id,
+            name,
+            ...lessonMarks
+        }
+    })
 
     // const handleDelete = (key: React.Key) => {
     //     const newData = dataSource.filter((item) => item.key !== key);
@@ -56,80 +81,21 @@ export const Journal: React.FC = observer(() => {
         {
             title: 'ФИО',
             dataIndex: 'name',
-            fixed: true,
-            width: 300,
+            fixed: 'left',
+            width: '300px',
             className: 'fio-column',
+            sorter: (a, b) => a.name - b.name,
         },
-        {
-            title: '05.04',
-            dataIndex: 'date',
+        ...eventsByCurrentGroup.map((event: IEvent) => ({
+            title: getShortDate(event.start_datetime),
+            dataIndex: getShortDate(event.start_datetime),
             width: '20px',
             editable: true,
-        },
-        {
-            title: '12.04',
-            dataIndex: 'date',
-            width: '20px',
-            editable: true,
-        },
-        {
-            title: '19.04',
-            dataIndex: 'date',
-            width: '20px',
-            editable: true,
-        },
-        {
-            title: '26.04',
-            dataIndex: 'date',
-            width: '20px',
-            editable: true,
-        },
-        {
-            title: '03.05',
-            dataIndex: 'date',
-            width: '20px',
-            editable: true,
-        },
-        {
-            title: '10.05',
-            dataIndex: 'date',
-            width: '20px',
-            editable: true,
-        },
-        {
-            title: '17.05',
-            dataIndex: 'date',
-            width: '20px',
-            editable: true,
-        },
-        {
-            title: '24.05',
-            dataIndex: 'date',
-            width: '20px',
-            editable: true,
-        },
-        // {
-        //     title: 'operation',
-        //     dataIndex: 'operation',
-        //     render: (_, record) =>
-        //         dataSource.length >= 1 ? (
-        //             <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
-        //                 <a>Delete</a>
-        //             </Popconfirm>
-        //         ) : null,
-        // },
-    ];
 
-    const handleAdd = () => {
-        const newData: DataType = {
-            key: count,
-            name: `Edward King ${count}`,
-            age: '32',
-            address: `London, Park Lane no. ${count}`,
-        };
-        // setDataSource([...dataSource, newData]);
-        setCount(count + 1);
-    };
+            // filters: [],
+            // onFilter: (value, record) => record.name.includes(value as string),
+        })),
+    ];
 
     const handleSave = (row: DataType) => {
         // const newData = [...dataSource];
@@ -155,6 +121,23 @@ export const Journal: React.FC = observer(() => {
         if (!col.editable) {
             return col;
         }
+
+        let dayNumber: number;
+        let monthNumber: number;
+
+        if (col.title) {
+            const [day, month] = String(col.title).split('.')
+            dayNumber = Number.parseInt(day, 10)
+            monthNumber = Number.parseInt(month, 10)
+        }
+
+        const eventId = eventsByCurrentGroup.find(({ start_datetime }) => {
+            const eventDay = new Date(start_datetime).getDate()
+            const eventMonth = new Date(start_datetime).getMonth() + 1
+
+            return eventDay === dayNumber && eventMonth === monthNumber
+        })?.id
+
         return {
             ...col,
             onCell: (record: DataType) => ({
@@ -162,10 +145,15 @@ export const Journal: React.FC = observer(() => {
                 editable: col.editable,
                 dataIndex: col.dataIndex,
                 title: col.title,
-                handleSave
-            })
+                handleSave,
+                eventId,
+            }),
+            eventId,
         };
     });
+
+    console.log("columns", columns)
+    console.log("studentsByGroupDataSource", studentsByGroupDataSource)
 
     return (
         <>
@@ -173,6 +161,7 @@ export const Journal: React.FC = observer(() => {
             <Table
                 components={components}
                 rowClassName={() => 'editable-row'}
+                title={() => <b>{`Группа ${currentGroup?.number}, курс ${currentGroup?.course}`}</b>}
                 bordered
                 dataSource={studentsByGroupDataSource}
                 columns={columns as ColumnTypes}

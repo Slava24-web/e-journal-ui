@@ -1,9 +1,9 @@
-import { IGroup, ILessonType, ILevel, ISpec, IStudent } from './models';
+import { IGroup, ILessonType, ILevel, IMark, ISpec, IStudent, MarkInfo } from './models';
 import { makeAutoObservable } from 'mobx';
 import { getAllLessonTypesApi, getAllLevelsApi, getAllSpecsApi } from '../../api/references';
 import NotificationSlice from '../notification/slice';
 import { NotificationType } from '../notification/models';
-import { getAllGroupsApi, getStudentsByGroupIdApi } from '../../api/journal';
+import { addMarkApi, getAllGroupsApi, getMarksByEventIdApi, getStudentsByGroupIdApi } from '../../api/journal';
 
 class JournalSlice {
     specs: ISpec[] = []
@@ -11,6 +11,7 @@ class JournalSlice {
     groups: IGroup[] = []
     lesson_types: ILessonType[] = []
     students_by_group: IStudent[] = []
+    marks_by_event: Record<number, IMark[]> = {}
 
     constructor() {
         makeAutoObservable(this);
@@ -18,6 +19,10 @@ class JournalSlice {
 
     clearStudentsByGroup() {
         this.students_by_group = []
+    }
+
+    clearMarksByEvent(event_id: number) {
+        this.marks_by_event[event_id] = []
     }
 
     fetchAllSpecs() {
@@ -100,6 +105,45 @@ class JournalSlice {
             })
     }
 
+    fetchAddMark(markInfo: MarkInfo) {
+        addMarkApi(markInfo)
+            .then(response => {
+                if (response?.data) {
+                    const { mark } = response.data
+                    this.marks_by_event = {
+                        ...this.marks_by_event,
+                        [mark.event_id]: [...(this.marks_by_event[mark.event_id] ?? []), mark]
+                    }
+                }
+            })
+            .catch((error) => {
+                NotificationSlice.setNotificationParams({
+                    type: NotificationType.error,
+                    message: `Не удалось добавить оценку!`,
+                    description: error.message,
+                })
+            })
+    }
+
+    fetchMarksByEventId(event_id: number) {
+        getMarksByEventIdApi(event_id)
+            .then(response => {
+                if (response?.data) {
+                    this.marks_by_event = {
+                        ...this.marks_by_event,
+                        [event_id]: response.data
+                    }
+                }
+            })
+            .catch((error) => {
+                NotificationSlice.setNotificationParams({
+                    type: NotificationType.error,
+                    message: `Не удалось загрузить сведения об успеваемости!`,
+                    description: error.message,
+                })
+            })
+    }
+
     get getSpecs() {
         return this.specs
     }
@@ -118,6 +162,10 @@ class JournalSlice {
 
     get getStudentsByGroup() {
         return this.students_by_group
+    }
+
+    get getMarksByEvent() {
+        return this.marks_by_event
     }
 }
 

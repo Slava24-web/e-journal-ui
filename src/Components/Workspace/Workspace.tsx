@@ -6,9 +6,10 @@ import { Calendar } from '../../Pages/Calendar';
 import { Journal } from '../../Pages/Journal';
 import EventSlice from '../../store/events/slice';
 import JournalSlice from '../../store/journal/slice';
+import { observer } from 'mobx-react-lite';
 
 // Рабочая область (контент)
-export const Workspace = () => {
+export const Workspace = observer(() => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -36,4 +37,4 @@ export const Workspace = () => {
       </Routes>
     </div>
   );
-}
+})
