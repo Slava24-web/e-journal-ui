@@ -144,6 +144,29 @@ class JournalSlice {
             })
     }
 
+    fetchMarksByEventIds(event_ids: number[]) {
+        console.log(event_ids)
+        for (let i = 0; i < event_ids.length; i++) {
+            const event_id = event_ids[i]
+            getMarksByEventIdApi(event_id)
+                .then(response => {
+                    if (response?.data) {
+                        this.marks_by_event = {
+                            ...this.marks_by_event,
+                            [event_id]: response.data
+                        }
+                    }
+                })
+                .catch((error) => {
+                    NotificationSlice.setNotificationParams({
+                        type: NotificationType.error,
+                        message: `Не удалось загрузить сведения об успеваемости!`,
+                        description: error.message,
+                    })
+                })
+        }
+    }
+
     get getSpecs() {
         return this.specs
     }

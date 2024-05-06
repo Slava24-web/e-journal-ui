@@ -1,12 +1,14 @@
-import { EventInfo, IEvent, IEventBack } from './models';
+import { EventInfo, IDiscipline, IEvent, IEventBack } from './models';
 import { makeAutoObservable, toJS } from 'mobx';
 import { fetchAddEventApi, fetchAllEventsApi, fetchUpdateEventApi } from '../../api/events';
 import NotificationSlice from '../notification/slice';
 import { NotificationType } from '../notification/models';
 import AuthSlice from '../auth/slice'
+import { getAllDisciplinesApi } from '../../api/references';
 
 class EventSlice {
     events: IEvent[] = []
+    disciplines: IDiscipline[] = []
 
     constructor() {
         makeAutoObservable(this);
@@ -88,6 +90,22 @@ class EventSlice {
             })
     }
 
+    fetchAllDisciplines() {
+        getAllDisciplinesApi()
+            .then(response => {
+                if (response?.data) {
+                    this.disciplines = response.data
+                }
+            })
+            .catch((error) => {
+                NotificationSlice.setNotificationParams({
+                    type: NotificationType.error,
+                    message: `Не удалось загрузить список дисциплин!`,
+                    description: error.message,
+                })
+            })
+    }
+
     fetchGroupData(group_id: number) {
 
     }
@@ -102,6 +120,10 @@ class EventSlice {
 
     get getCalendarEvents(): IEvent[] {
         return this.events
+    }
+
+    get getDisciplines(): IDiscipline[] {
+        return this.disciplines
     }
 }
 

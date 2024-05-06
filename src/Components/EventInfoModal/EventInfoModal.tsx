@@ -8,6 +8,7 @@ import KubsuIcon from '../../assets/kubsu.png'
 import { BlockText, EventModalInfoQRWrapper, EventModalInfoWrapper } from './EventInfoModal.style'
 import { toJS } from 'mobx'
 import JournalSlice from '../../store/journal/slice'
+import EventSlice from '../../store/events/slice';
 
 const { Text } = Typography
 
@@ -47,14 +48,15 @@ export const EventInfoModal: React.FC<Props> = observer((props) => {
     if (currentEvent) {
         const storeLessonTypes = toJS(JournalSlice.getLessonTypes)
         const storeGroups = toJS(JournalSlice.getGroups)
+        const disciplines = toJS(EventSlice.getDisciplines)
 
-        const { id, title, room, start_datetime, end_datetime, group_id, lesson_type_id, description } = currentEvent
+        const { id, discipline_id, room, start_datetime, end_datetime, group_id, lesson_type_id, description } = currentEvent
 
         const lessonType = storeLessonTypes.find(({ id }) => id === lesson_type_id)?.name
         const groupNumber = storeGroups.find(({ id }) => id === group_id)?.number
 
         // TODO: Вписать url с параметрами
-        const qrValue = `${id}/${title}`
+        const qrValue = `${id}/${discipline_id}`
 
         // Переход к журналу с нужным id события
         const onRedirectToJournal = () => {
@@ -67,7 +69,7 @@ export const EventInfoModal: React.FC<Props> = observer((props) => {
 
         return (
             <Modal
-                title={`${lessonType}: "${title}"`}
+                title={`${lessonType}: "${disciplines.find(({ id }) => id === discipline_id)?.name ?? ''}"`}
                 open={isModalOpen}
                 onOk={onRedirectToJournal}
                 onCancel={handleCancel}

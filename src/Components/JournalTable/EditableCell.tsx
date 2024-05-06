@@ -48,23 +48,24 @@ export const EditableCell: React.FC<EditableCellProps> = (props) => {
 
     const toggleEdit = () => {
         setEditing(!editing)
-        form.setFieldsValue({ [dataIndex]: record[dataIndex] })
+        form.setFieldsValue({ [dataIndex]: record?.[dataIndex] })
     }
 
     const save = async () => {
         try {
-            console.log("record", record)
-            console.log("props", props)
-
             const mark = {
                 // @ts-ignore
                 event_id: props.eventId,
+                // @ts-ignore
+                discipline_id: props.discipline_id,
                 student_id: Number(record.key),
-                mark: inputRef.current?.input?.value
+                mark: inputRef.current?.input?.value,
             }
 
             toggleEdit()
-            JournalSlice.fetchAddMark(mark)
+            if (mark.mark) {
+                JournalSlice.fetchAddMark(mark)
+            }
         } catch (errInfo) {
             console.log('Save failed:', errInfo)
         }
@@ -81,7 +82,7 @@ export const EditableCell: React.FC<EditableCellProps> = (props) => {
                 <Input ref={inputRef} onPressEnter={save} onBlur={save} />
             </Form.Item>
         ) : (
-            <div className='editable-cell-value-wrap' style={{ paddingRight: 24 }}>
+            <div className='editable-cell-value-wrap' style={{ textAlign: 'center' }}>
                 {children}
             </div>
         );

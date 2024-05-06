@@ -26,7 +26,7 @@ function CustomView(eventInfo: EventInput) {
     return (
         <>
             <div className='view-events' style={{ overflow: 'hidden' }}>
-                &nbsp;{event._def.title} - {event._def.extendedProps.room} ауд.
+                &nbsp;{event._def.extendedProps.room} ауд.
             </div>
         </>
     );
@@ -41,7 +41,7 @@ export const Calendar = observer(() => {
     const storeEvents = toJS(EventSlice.getCalendarEvents)
 
     const events = storeEvents.map((event: IEvent) => ({
-        title: event.title,
+        discipline_id: event.discipline_id,
         start: new Date(Number(event.start_datetime)).toISOString(),
         end: new Date(Number(event.end_datetime)).toISOString(),
         description: event.description,

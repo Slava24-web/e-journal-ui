@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Button, Popconfirm, Table, Upload, UploadProps, message } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Table } from 'antd';
 import { EditableRow, EditableCell } from '../../Components/JournalTable/EditableCell';
-import { DownloadOutlined } from '@ant-design/icons';
 import { JournalHeader } from '../../Components/JournalHeader';
 import JournalSlice from '../../store/journal/slice';
 import { observer } from 'mobx-react-lite';
@@ -33,26 +32,32 @@ export const Journal: React.FC = observer(() => {
     const storeGroups = toJS(JournalSlice.getGroups)
     const marks = toJS(JournalSlice.getMarksByEvent)
 
+    // Все события по текущей группе
+    const eventsByCurrentGroup = storeEvents.filter(({ group_id }) => group_id === currentGroup?.id)
+
     useEffect(() => {
         if (eventId) {
             const group_id = storeEvents.find(({ id }) => eventId)?.group_id
-
             if (group_id) {
-                JournalSlice.fetchMarksByEventId(eventId)
-                JournalSlice.fetchStudentsByGroupId(group_id)
-                // Текущая группа
                 setCurrentGroup(storeGroups.find(({ id }) => id === group_id))
+                JournalSlice.fetchStudentsByGroupId(group_id)
             }
-        }
-
-        return () => {
-            JournalSlice.clearStudentsByGroup()
-            JournalSlice.clearMarksByEvent(Number(eventId))
         }
     }, []);
 
-    // Все события по текущей группе
-    const eventsByCurrentGroup = storeEvents.filter(({ group_id }) => group_id === currentGroup?.id)
+    useEffect(() => {
+        if (currentGroup) {
+            const fetchMarks = async () => {
+                const event_ids = eventsByCurrentGroup.reduce((ids: number[], { id }) => [...ids, id], [])
+                await Promise.all(event_ids.map(async (id) => {
+                    await JournalSlice.fetchMarksByEventId(id)
+                }))
+            }
+
+            fetchMarks()
+        }
+    }, [currentGroup]);
+
 
     // Записи таблицы
     // @ts-ignore
@@ -82,18 +87,27 @@ export const Journal: React.FC = observer(() => {
             title: 'ФИО',
             dataIndex: 'name',
             fixed: 'left',
-            width: '300px',
+            width: '300px !important',
             className: 'fio-column',
             sorter: (a, b) => a.name - b.name,
         },
         ...eventsByCurrentGroup.map((event: IEvent) => ({
             title: getShortDate(event.start_datetime),
             dataIndex: getShortDate(event.start_datetime),
-            width: '20px',
+            width: '20px !important',
             editable: true,
-
-            // filters: [],
-            // onFilter: (value, record) => record.name.includes(value as string),
+            className: event.id === eventId ? 'active-event' : 'common-event',
+            filters: [
+                { text: '5', value: '5' },
+                { text: '4', value: '4' },
+                { text: '3', value: '3' },
+                { text: '2', value: '2' },
+                { text: 'н', value: 'н' },
+            ],
+            // @ts-ignore
+            onFilter: (value, record) => {
+                return record[getShortDate(event.start_datetime)]?.indexOf(value as string) === 0
+            },
         })),
     ];
 
@@ -131,12 +145,12 @@ export const Journal: React.FC = observer(() => {
             monthNumber = Number.parseInt(month, 10)
         }
 
-        const eventId = eventsByCurrentGroup.find(({ start_datetime }) => {
+        const event = eventsByCurrentGroup.find(({ start_datetime }) => {
             const eventDay = new Date(start_datetime).getDate()
             const eventMonth = new Date(start_datetime).getMonth() + 1
 
             return eventDay === dayNumber && eventMonth === monthNumber
-        })?.id
+        })
 
         return {
             ...col,
@@ -146,18 +160,17 @@ export const Journal: React.FC = observer(() => {
                 dataIndex: col.dataIndex,
                 title: col.title,
                 handleSave,
-                eventId,
+                eventId: event?.id,
+                discipline_id: event?.discipline_id
             }),
-            eventId,
+            eventId: event?.id,
+            discipline_id: event?.discipline_id
         };
     });
 
-    console.log("columns", columns)
-    console.log("studentsByGroupDataSource", studentsByGroupDataSource)
-
     return (
         <>
-            <JournalHeader />
+            <JournalHeader currentGroup={currentGroup} />
             <Table
                 components={components}
                 rowClassName={() => 'editable-row'}

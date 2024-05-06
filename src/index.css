@@ -5,3 +5,11 @@
 .fio-column {
     max-width: 300px !important;
 }
+
+.active-event {
+    background: rgba(100, 149, 237, 0.09);
+}
+
+.common-event, .active-event {
+    width: 20px !important;
+}

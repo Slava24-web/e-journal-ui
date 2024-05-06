@@ -3,7 +3,7 @@ import { Button, Card, Col, DatePicker, Drawer, Form, Input, Radio, Row, Select,
 import { CloseOutlined } from '@ant-design/icons';
 import { Callbacks } from 'rc-field-form/lib/interface';
 import { EventInput } from '@fullcalendar/core';
-import { EventInfo, IEvent } from '../../store/events/models';
+import { EventInfo, IDiscipline, IEvent } from '../../store/events/models';
 import EventSlice from '../../store/events/slice';
 import JournalSlice from '../../store/journal/slice';
 import { observer } from 'mobx-react-lite';
@@ -21,10 +21,12 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
     const [form] = Form.useForm()
     // События в боковой панели
     const [formFields, setFormFields] = useState<EventInfo[]>([])
+    const [isNewDiscipline, setIsNewDiscipline] = useState<boolean>(false)
 
     const storeEvents = toJS(EventSlice.getCalendarEvents)
     const storeGroups = toJS(JournalSlice.getGroups)
     const storeLessonTypes = toJS(JournalSlice.getLessonTypes)
+    const disciplines = toJS(EventSlice.getDisciplines)
 
     const currentDate_year = new Date(Date.parse(currentDate)).getFullYear()
     const currentDate_month = new Date(Date.parse(currentDate)).getMonth() + 1
@@ -33,6 +35,8 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
     // При открытии боковой
     useEffect(() => {
         if (openEventDrawer) {
+            EventSlice.fetchAllDisciplines()
+
             // События на выбранную дату
             const filteredByCurrentDateEvents: EventInfo[] = storeEvents
                 .filter((event: IEvent) =>
@@ -45,7 +49,7 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
                 )
                 .map((event: IEvent) => ({
                     id: event.id,
-                    title: event.title,
+                    discipline_id: event.discipline_id,
                     group_id: event.group_id,
                     // start: event.start_datetime,
                     // end: event.end_datetime,
@@ -61,27 +65,23 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
 
     /** Обработчик изменения полей в форме */
     const onValuesChange: Callbacks<any>['onValuesChange'] = (changedValues, allValues) => {
+        console.log("allValues", allValues.events)
         const events: EventInfo[] = allValues.events.map((event: EventInput, index: number) => {
             // currentDate timestamp
             const date = Date.parse(currentDate)
             // @ts-ignore
             // console.log(new Date(date).setHours(event.start?.$d?.getHours(), event.start?.$d?.getMinutes()))
 
+            if (event.discipline_id === 0) {
+                setIsNewDiscipline(true)
+            } else {
+                setIsNewDiscipline(false)
+            }
+
             if (formFields[index]?.id) {
                 return {
                     ...(formFields[index] ?? {}),
-                    title: event.title ?? '',
-                    group_id: event.group_id ?? 1,
-                    // @ts-ignore
-                    // start_datetime: new Date(date).setHours(event.start?.$d?.getHours(), event.start?.$d?.getMinutes()),
-                    // @ts-ignore
-                    // end_datetime: new Date(date).setHours(event.end?.$d?.getHours(), event.end?.$d?.getMinutes()),
-                    room: event.room,
-                    lesson_type_id: event.lesson_type_id,
-                } as EventInfo
-            } else {
-                return {
-                    title: event.title ?? '',
+                    discipline_id: event.discipline_id,
                     group_id: event.group_id ?? 1,
                     // @ts-ignore
                     start_datetime: new Date(date).setHours(event.start?.$d?.getHours(), event.start?.$d?.getMinutes()),
@@ -89,6 +89,18 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
                     end_datetime: new Date(date).setHours(event.end?.$d?.getHours(), event.end?.$d?.getMinutes()),
                     room: event.room,
                     lesson_type_id: event.lesson_type_id,
+                } as EventInfo
+            } else {
+                return {
+                    group_id: event.group_id ?? 1,
+                    // @ts-ignore
+                    start_datetime: new Date(date).setHours(event.start?.$d?.getHours(), event.start?.$d?.getMinutes()),
+                    // @ts-ignore
+                    end_datetime: new Date(date).setHours(event.end?.$d?.getHours(), event.end?.$d?.getMinutes()),
+                    room: event.room,
+                    lesson_type_id: event.lesson_type_id,
+                    discipline_id: event.discipline_id,
+                    discipline_name: event.discipline_id === 0 ? event.discipline_name : '',
                 } as EventInfo
             }
         })
@@ -153,14 +165,42 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
                                                 extra={<CloseOutlined onClick={() => remove(name)} />}
                                             >
                                                 {/* Название занятия */}
+                                                {/*<Form.Item*/}
+                                                {/*    {...restField}*/}
+                                                {/*    label="Название"*/}
+                                                {/*    name={[name, 'title']}*/}
+                                                {/*    rules={[{ required: true, message: 'Введите название!' }]}*/}
+                                                {/*>*/}
+                                                {/*    <Input />*/}
+                                                {/*</Form.Item>*/}
                                                 <Form.Item
                                                     {...restField}
-                                                    label="Название"
-                                                    name={[name, 'title']}
-                                                    rules={[{ required: true, message: 'Введите название!' }]}
+                                                    label="Дисциплина"
+                                                    name={[name, 'discipline_id']}
+                                                    rules={[{ required: true, message: 'Выберите дисциплину!' }]}
                                                 >
-                                                    <Input />
+                                                    <Select>
+                                                        {
+                                                            disciplines.map(({ id, name }: IDiscipline) => (
+                                                                <Select.Option value={id}>{name}</Select.Option>
+                                                            ))
+                                                        }
+                                                        <Select.Option value={0}>+ Новая дисциплина</Select.Option>
+                                                    </Select>
                                                 </Form.Item>
+
+                                                {
+                                                    isNewDiscipline && (
+                                                        <Form.Item
+                                                            {...restField}
+                                                            label="Название"
+                                                            name={[name, 'discipline_name']}
+                                                            rules={[{ required: true, message: 'Введите название дисциплины!' }]}
+                                                        >
+                                                            <Input />
+                                                        </Form.Item>
+                                                    )
+                                                }
 
                                                 {/* Тип занятия */}
                                                 <Form.Item

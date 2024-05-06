@@ -4,10 +4,10 @@ import { Identity } from '@fullcalendar/core/internal';
 
 export interface IEvent {
     id: number
+    discipline_id: number
     group_id: number
     lesson_type_id: number
     user_id: number
-    title: string
     start_datetime: number
     end_datetime: number
     room?: string
@@ -24,4 +24,10 @@ export interface EventInfo extends Omit<IEvent, 'id' | 'user_id'> {
     user_id?: number
     start?: DateInput
     end?: DateInput
+    discipline_name?: string
+}
+
+export interface IDiscipline {
+    id: number
+    name: string
 }

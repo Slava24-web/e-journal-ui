@@ -16,3 +16,7 @@ export const getAllLevelsApi = async () => {
 export const getAllLessonTypesApi = async () => {
     return await ReferencesClient.get('/lesson_types/all')
 }
+
+export const getAllDisciplinesApi = async () => {
+    return await ReferencesClient.get('/disciplines/all')
+}
