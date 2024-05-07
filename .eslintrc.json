@@ -21,7 +21,8 @@
     "plugins": [
 //        "@typescript-eslint",
         "react",
-        "prettier"
+        "prettier",
+        "@babel/plugin-proposal-class-properties"
     ],
     "rules": {
         "react/jsx-props-no-spreading": ["warn"],

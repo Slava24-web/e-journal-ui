@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react';
 import { createSearchParams, useNavigate } from "react-router-dom"
 import { observer } from 'mobx-react-lite'
 import { Divider, Modal, QRCode, Typography } from 'antd'
@@ -45,6 +45,10 @@ export const EventInfoModal: React.FC<Props> = observer((props) => {
 
     const navigate = useNavigate()
 
+    useEffect(() => {
+        EventSlice.fetchAllDisciplines()
+    }, [])
+
     if (currentEvent) {
         const storeLessonTypes = toJS(JournalSlice.getLessonTypes)
         const storeGroups = toJS(JournalSlice.getGroups)
@@ -54,6 +58,7 @@ export const EventInfoModal: React.FC<Props> = observer((props) => {
 
         const lessonType = storeLessonTypes.find(({ id }) => id === lesson_type_id)?.name
         const groupNumber = storeGroups.find(({ id }) => id === group_id)?.number
+        const disciplineName = disciplines.find(({ id }) => id === discipline_id)?.name
 
         // TODO: Вписать url с параметрами
         const qrValue = `${id}/${discipline_id}`
@@ -69,7 +74,7 @@ export const EventInfoModal: React.FC<Props> = observer((props) => {
 
         return (
             <Modal
-                title={`${lessonType}: "${disciplines.find(({ id }) => id === discipline_id)?.name ?? ''}"`}
+                title={`${lessonType}: "${disciplineName}"`}
                 open={isModalOpen}
                 onOk={onRedirectToJournal}
                 onCancel={handleCancel}

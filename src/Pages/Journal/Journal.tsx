@@ -16,7 +16,7 @@ type DataType = Record<string, string | number>
 
 type ColumnTypes = Exclude<EditableTableProps['columns'], undefined>;
 
-const getShortDate = (timestamp: number): string => {
+export const getShortDate = (timestamp: number): string => {
     return `${padStart(new Date(timestamp).getDate(), 2)}.${padStart(new Date(timestamp).getMonth() + 1, 2)}`
 }
 
@@ -25,12 +25,13 @@ export const Journal: React.FC = observer(() => {
     const eventId = searchEventId ? Number(searchEventId) : null
 
     const [currentGroup, setCurrentGroup] = useState<IGroup>()
+    const [currentEvent, setCurrentEvent] = useState<IEvent>()
 
     /** Store */
     const storeEvents: IEvent[] = toJS(EventSlice.getCalendarEvents)
     const studentsByGroup: IStudent[] = toJS(JournalSlice.getStudentsByGroup)
-    const storeGroups = toJS(JournalSlice.getGroups)
-    const marks = toJS(JournalSlice.getMarksByEvent)
+    const storeGroups: IGroup[] = toJS(JournalSlice.getGroups)
+    const marks: Record<number, IMark[]> = toJS(JournalSlice.getMarksByEvent)
 
     // Все события по текущей группе
     const eventsByCurrentGroup = storeEvents.filter(({ group_id }) => group_id === currentGroup?.id)
@@ -40,6 +41,8 @@ export const Journal: React.FC = observer(() => {
             const group_id = storeEvents.find(({ id }) => eventId)?.group_id
             if (group_id) {
                 setCurrentGroup(storeGroups.find(({ id }) => id === group_id))
+                setCurrentEvent(storeEvents.find(({ id }) => id === eventId))
+
                 JournalSlice.fetchStudentsByGroupId(group_id)
             }
         }
@@ -170,7 +173,14 @@ export const Journal: React.FC = observer(() => {
 
     return (
         <>
-            <JournalHeader currentGroup={currentGroup} />
+            <JournalHeader
+                currentEvent={currentEvent}
+                currentGroup={currentGroup}
+                storeGroups={storeGroups}
+                eventsByCurrentGroup={eventsByCurrentGroup}
+                studentsByGroup={studentsByGroup}
+                marks={marks}
+            />
             <Table
                 components={components}
                 rowClassName={() => 'editable-row'}
