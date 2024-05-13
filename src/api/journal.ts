@@ -1,6 +1,6 @@
 import axios from 'axios/index';
 import config from '../config';
-import { MarkInfo } from '../store/journal/models';
+import { IMark, MarkInfo } from '../store/journal/models';
 
 export const JournalClient = axios.create({
     baseURL: `${config.API_URL}/journal`,
@@ -17,6 +17,12 @@ export const getStudentsByGroupIdApi = async (group_id: number) => {
 export const addMarkApi = async (markInfo: MarkInfo) => {
     return await JournalClient.post('/marks/add', {
         markInfo
+    })
+}
+
+export const updateMarkApi = async (mark: IMark) => {
+    return await JournalClient.post('/marks/update', {
+        mark
     })
 }
 

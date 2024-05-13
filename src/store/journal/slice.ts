@@ -3,7 +3,13 @@ import { makeAutoObservable } from 'mobx';
 import { getAllLessonTypesApi, getAllLevelsApi, getAllSpecsApi } from '../../api/references';
 import NotificationSlice from '../notification/slice';
 import { NotificationType } from '../notification/models';
-import { addMarkApi, getAllGroupsApi, getMarksByEventIdApi, getStudentsByGroupIdApi } from '../../api/journal';
+import {
+    addMarkApi,
+    getAllGroupsApi,
+    getMarksByEventIdApi,
+    getStudentsByGroupIdApi,
+    updateMarkApi
+} from '../../api/journal';
 
 class JournalSlice {
     specs: ISpec[] = []
@@ -125,6 +131,13 @@ class JournalSlice {
             })
     }
 
+    fetchUpdateMark(mark: IMark) {
+        updateMarkApi(mark)
+            .then(async () => {
+                await this.fetchMarksByEventId(mark.event_id)
+            })
+    }
+
     fetchMarksByEventId(event_id: number) {
         getMarksByEventIdApi(event_id)
             .then(response => {
@@ -142,29 +155,6 @@ class JournalSlice {
                     description: error.message,
                 })
             })
-    }
-
-    fetchMarksByEventIds(event_ids: number[]) {
-        console.log(event_ids)
-        for (let i = 0; i < event_ids.length; i++) {
-            const event_id = event_ids[i]
-            getMarksByEventIdApi(event_id)
-                .then(response => {
-                    if (response?.data) {
-                        this.marks_by_event = {
-                            ...this.marks_by_event,
-                            [event_id]: response.data
-                        }
-                    }
-                })
-                .catch((error) => {
-                    NotificationSlice.setNotificationParams({
-                        type: NotificationType.error,
-                        message: `Не удалось загрузить сведения об успеваемости!`,
-                        description: error.message,
-                    })
-                })
-        }
     }
 
     get getSpecs() {

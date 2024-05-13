@@ -1,6 +1,11 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Form, GetRef, Input, InputRef } from 'antd';
+import React, { MouseEventHandler, SyntheticEvent, useContext, useEffect, useRef, useState } from 'react';
+import { Button, Checkbox, Form, GetRef, Input, InputRef, Popover } from 'antd';
 import JournalSlice from '../../store/journal/slice'
+import { CreateAccountLink } from '../../Pages/SingIn/SignIn.styled';
+import AuthSlice from '../../store/auth/slice';
+import { IMark } from '../../store/journal/models';
+import { toJS } from 'mobx';
+import { observer } from 'mobx-react-lite';
 
 interface EditableRowProps {
     index: number;
@@ -33,12 +38,18 @@ export const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => 
     )
 }
 
-export const EditableCell: React.FC<EditableCellProps> = (props) => {
+export const EditableCell: React.FC<EditableCellProps> = observer((props) => {
     const { title, editable, children, dataIndex, record, handleSave, ...restProps } = props
 
-    const [editing, setEditing] = useState(false)
+    const [editing, setEditing] = useState<boolean>(false)
+    const [openNotePopover, setOpenNotePopover] = useState<boolean>(false)
     const inputRef = useRef<InputRef>(null)
     const form = useContext(EditableContext)!
+
+    const marks: Record<number, IMark[]> = toJS(JournalSlice.getMarksByEvent)
+
+    // @ts-ignore
+    const currentMark = marks[props.eventId]?.find((mark: IMark) => mark.event_id === props.eventId && record.key === mark.student_id)
 
     useEffect(() => {
         if (editing) {
@@ -49,6 +60,15 @@ export const EditableCell: React.FC<EditableCellProps> = (props) => {
     const toggleEdit = () => {
         setEditing(!editing)
         form.setFieldsValue({ [dataIndex]: record?.[dataIndex] })
+    }
+
+    const onClickRightButton: MouseEventHandler<HTMLTableDataCellElement> = (event) => {
+        event.preventDefault()
+        handleOpenNotePopover(true)
+    }
+
+    const handleOpenNotePopover = (newOpen: boolean) => {
+        setOpenNotePopover(newOpen)
     }
 
     const save = async () => {
@@ -71,6 +91,20 @@ export const EditableCell: React.FC<EditableCellProps> = (props) => {
         }
     };
 
+    const onFinish = async (formData: FormData) => {
+        // @ts-ignore
+        JournalSlice.fetchUpdateMark({
+            ...(currentMark || {}),
+            // @ts-ignore
+            is_control: formData.isControl ?? currentMark?.is_control ?? false,
+            // @ts-ignore
+            note: formData.note ?? currentMark?.note ?? '',
+            // @ts-ignore
+            pks: formData.pks ?? currentMark?.pks ?? ''
+        })
+        handleOpenNotePopover(false)
+    };
+
     let childNode = children;
 
     if (editable) {
@@ -89,11 +123,64 @@ export const EditableCell: React.FC<EditableCellProps> = (props) => {
     }
 
     return (
-        <td
-            {...restProps}
-            onClick={toggleEdit}
+        <Popover
+            content={
+                <Form
+                    layout='vertical'
+                    name='mark_notes'
+                    onFinish={onFinish}
+                >
+                    <Form.Item
+                        name="isControl"
+                        valuePropName="checked"
+                        initialValue={currentMark?.is_control}
+                    >
+                        <Checkbox>Контрольная работа</Checkbox>
+                    </Form.Item>
+
+                    <Form.Item
+                        name='pks'
+                        label='Номера зачтённых компетенций'
+                        initialValue={currentMark?.pks}
+                    >
+                        <Input placeholder='Укажите цифры через запятую (1, 2, 3)' />
+                    </Form.Item>
+
+                    <Form.Item
+                        name='note'
+                        label='Текст заметки'
+                        initialValue={currentMark?.note}
+                    >
+                        <Input placeholder='Текст' />
+                    </Form.Item>
+
+                    <div style={{ display: 'flex', gap: 15, justifyContent: 'flex-end' }}>
+                        <Form.Item style={{ marginBottom: 0 }}>
+                            <Button type='default' onClick={() => handleOpenNotePopover(false)}>
+                                Отмена
+                            </Button>
+                        </Form.Item>
+
+                        <Form.Item style={{ marginBottom: 0 }}>
+                            <Button type='primary' htmlType='submit'>
+                                Сохранить
+                            </Button>
+                        </Form.Item>
+                    </div>
+                </Form>
+            }
+            title="Добавить заметку"
+            trigger="click"
+            open={openNotePopover}
+            onOpenChange={handleOpenNotePopover}
         >
-            {childNode}
-        </td>
+            <td
+                {...restProps}
+                onClick={toggleEdit}
+                onContextMenu={onClickRightButton}
+            >
+                {childNode}
+            </td>
+        </Popover>
     )
-}
+});

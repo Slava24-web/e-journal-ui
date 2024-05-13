@@ -7,6 +7,7 @@ import { Journal } from '../../Pages/Journal';
 import EventSlice from '../../store/events/slice';
 import JournalSlice from '../../store/journal/slice';
 import { observer } from 'mobx-react-lite';
+import { Generator } from '../../Pages/Generator/Generator';
 
 // Рабочая область (контент)
 export const Workspace = observer(() => {
@@ -34,6 +35,7 @@ export const Workspace = observer(() => {
       <Routes>
         <Route path="" element={<Calendar />} />
         <Route path="/journal" element={<Journal />} />
+        <Route path="/generator" element={<Generator />} />
       </Routes>
     </div>
   );

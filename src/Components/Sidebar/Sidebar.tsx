@@ -3,12 +3,12 @@ import { Layout, Menu, MenuProps } from 'antd';
 import {
   BookOutlined,
   CalendarOutlined,
+  ExperimentOutlined,
   FileOutlined,
   TeamOutlined,
   UnorderedListOutlined,
-  UserOutlined,
+  UserOutlined
 } from '@ant-design/icons';
-import Icon from 'antd/es/icon';
 import { Link } from 'react-router-dom';
 
 const { Sider } = Layout;
@@ -28,19 +28,6 @@ const getItem = (
     label,
   } as MenuItem;
 };
-
-const items: MenuItem[] = [
-  getItem('Календарь', '1', <CalendarOutlined />),
-  getItem('Расписание', '2', <UnorderedListOutlined />),
-  getItem('Журнал', '3', <BookOutlined />),
-  getItem('User', 'sub1', <UserOutlined />, [
-    getItem('Tom', '3'),
-    getItem('Bill', '4'),
-    getItem('Alex', '5'),
-  ]),
-  getItem('Team', 'sub2', <TeamOutlined />, [getItem('Team 1', '6'), getItem('Team 2', '8')]),
-  getItem('Files', '9', <FileOutlined />),
-];
 
 // Боковое меню
 export const Sidebar: React.FC = () => {
@@ -64,6 +51,14 @@ export const Sidebar: React.FC = () => {
 
         <Menu.Item key="2" icon={<UnorderedListOutlined />} title="Журнал">
           <Link to="/main/journal" />
+        </Menu.Item>
+
+        <Menu.Item key="3" icon={<ExperimentOutlined />} title="Генератор заданий">
+          <Link to="/main/generator" />
+        </Menu.Item>
+
+        <Menu.Item key="4" icon={<TeamOutlined />} title="Курсовые работы">
+          <Link to="/main/coursework" />
         </Menu.Item>
       </Menu>
     </Sider>

@@ -65,7 +65,6 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
 
     /** Обработчик изменения полей в форме */
     const onValuesChange: Callbacks<any>['onValuesChange'] = (changedValues, allValues) => {
-        console.log("allValues", allValues.events)
         const events: EventInfo[] = allValues.events.map((event: EventInput, index: number) => {
             // currentDate timestamp
             const date = Date.parse(currentDate)
@@ -164,15 +163,6 @@ export const EventDrawer: React.FC<Props> = observer(({ closeDrawer, openEventDr
                                                 key={key}
                                                 extra={<CloseOutlined onClick={() => remove(name)} />}
                                             >
-                                                {/* Название занятия */}
-                                                {/*<Form.Item*/}
-                                                {/*    {...restField}*/}
-                                                {/*    label="Название"*/}
-                                                {/*    name={[name, 'title']}*/}
-                                                {/*    rules={[{ required: true, message: 'Введите название!' }]}*/}
-                                                {/*>*/}
-                                                {/*    <Input />*/}
-                                                {/*</Form.Item>*/}
                                                 <Form.Item
                                                     {...restField}
                                                     label="Дисциплина"

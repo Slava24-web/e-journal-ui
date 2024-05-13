@@ -18,6 +18,7 @@ import { IGroup, IMark, IStudent } from '../../../store/journal/models';
 import { AverageRatingBarChart } from './AverageRatingBarChart';
 import { AbsentBarChart } from './AbsentBarChart';
 import { Typography } from 'antd';
+import { AbsentLineChart } from './AbsentLineChart';
 
 const { Text } = Typography;
 
@@ -71,7 +72,8 @@ export const ChartModal: React.FC<Props> = (props) => {
                     onChange={(value) => setCurrentChart(value)}
                 >
                     <Select.Option value={1}>Средняя оценка</Select.Option>
-                    <Select.Option value={2}>Посещаемость</Select.Option>
+                    <Select.Option value={2}>Диаграмма посещаемости</Select.Option>
+                    <Select.Option value={3}>График посещаемости</Select.Option>
                 </Select>
             </ChatModalHeader>
 
@@ -90,6 +92,17 @@ export const ChartModal: React.FC<Props> = (props) => {
                 {
                     currentChart === 2 && (
                         <AbsentBarChart
+                            eventsByCurrentGroup={eventsByCurrentGroup}
+                            studentsByGroup={studentsByGroup}
+                            currentEvent={currentEvent}
+                            marks={marks}
+                        />
+                    )
+                }
+
+                {
+                    currentChart === 3 && (
+                        <AbsentLineChart
                             eventsByCurrentGroup={eventsByCurrentGroup}
                             studentsByGroup={studentsByGroup}
                             currentEvent={currentEvent}

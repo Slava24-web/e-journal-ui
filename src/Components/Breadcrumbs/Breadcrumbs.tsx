@@ -4,7 +4,9 @@ import { Breadcrumb } from 'antd';
 const pathnameMap = new Map([
     ['main', 'Главная'],
     ['calendar', 'Календарь'],
-    ['journal', 'Журнал']
+    ['journal', 'Журнал'],
+    ['generator', 'Генератор заданий'],
+    ['coursework', 'Курсовые работы']
 ]);
 
 // Хлебные крошки в области контента

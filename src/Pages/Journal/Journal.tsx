@@ -33,6 +33,8 @@ export const Journal: React.FC = observer(() => {
     const storeGroups: IGroup[] = toJS(JournalSlice.getGroups)
     const marks: Record<number, IMark[]> = toJS(JournalSlice.getMarksByEvent)
 
+    const loading = !storeEvents || !studentsByGroup || !storeGroups || !marks
+
     // Все события по текущей группе
     const eventsByCurrentGroup = storeEvents.filter(({ group_id }) => group_id === currentGroup?.id)
 
@@ -184,6 +186,7 @@ export const Journal: React.FC = observer(() => {
             <Table
                 components={components}
                 rowClassName={() => 'editable-row'}
+                loading={loading}
                 title={() => <b>{`Группа ${currentGroup?.number}, курс ${currentGroup?.course}`}</b>}
                 bordered
                 dataSource={studentsByGroupDataSource}
