@@ -4,7 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
-import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
+import interactionPlugin, { DateClickArg, EventDragStartArg, EventDragStopArg } from '@fullcalendar/interaction';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import ruLocale from '@fullcalendar/core/locales/ru';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -12,21 +12,23 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import { EventDrawer } from '../../Components/EventDrawer';
 import EventSlice from '../../store/events/slice';
 import JournalSlice from '../../store/journal/slice'
-import { IEvent } from '../../store/events/models';
+import { IDiscipline, IEvent } from '../../store/events/models';
 import { observer } from 'mobx-react-lite';
-import { EventClickArg, EventInput } from '@fullcalendar/core';
+import { DateInput, EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core';
 import { toJS } from 'mobx';
-import { Identity } from '@fullcalendar/core/internal';
 import { EventInfoModal } from '../../Components/EventInfoModal/EventInfoModal';
 
 // Отображение события в календаре
 function CustomView(eventInfo: EventInput) {
     const { event } = eventInfo
+    const disciplines = toJS(EventSlice.getDisciplines)
+
+    const disciplineName = disciplines?.find(({ id }: IDiscipline) => id === event._def.extendedProps.discipline_id)?.name
 
     return (
         <>
             <div className='view-events' style={{ overflow: 'hidden' }}>
-                &nbsp;{event._def.extendedProps.room} ауд.
+                &nbsp;{disciplineName ? `${disciplineName} - ` : ''} {event._def.extendedProps.room} ауд.
             </div>
         </>
     );
@@ -79,6 +81,31 @@ export const Calendar = observer(() => {
         setIsModalOpen(true)
     }
 
+    const eventDrop = async (arg: EventDropArg) => {
+        console.log("eventDrop", arg)
+        const { oldEvent, delta } = arg
+        const { _def: { extendedProps } } = oldEvent
+        const { days } = delta
+
+        const addTimestamp = days * 86400 * 1000
+
+
+        await EventSlice.fetchUpdateEvent([
+            {
+                user_id: extendedProps.user_id,
+                discipline_id: extendedProps.discipline_id,
+                group_id: extendedProps.group_id,
+                lesson_type_id: extendedProps.lesson_type_id,
+                room: extendedProps.room,
+                description: extendedProps.description,
+                start_datetime: extendedProps.start_datetime + addTimestamp,
+                end_datetime: extendedProps.end_datetime + addTimestamp
+            }
+        ])
+
+        arg.revert()
+    }
+
     return (
         <>
             <FullCalendar
@@ -90,8 +117,8 @@ export const Calendar = observer(() => {
                 slotMinTime='08:00:00'
                 slotMaxTime='22:00:00'
                 // customButtons={{
-                //   addNewEvent: {
-                //     text: 'Добавить событие',
+                //   setSemestrRange: {
+                //     text: '',
                 //     click: showDrawer,
                 //   },
                 // }}
@@ -108,9 +135,12 @@ export const Calendar = observer(() => {
                 nowIndicator
                 events={events}
                 expandRows
+                editable
+                droppable
                 contentHeight={600}
                 eventContent={CustomView}
                 dayMaxEvents={8}
+                eventDrop={eventDrop}
             />
 
             <EventDrawer

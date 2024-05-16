@@ -10,6 +10,7 @@ import {
     getStudentsByGroupIdApi,
     updateMarkApi
 } from '../../api/journal';
+import sortBy from 'lodash/sortBy';
 
 class JournalSlice {
     specs: ISpec[] = []
@@ -99,7 +100,7 @@ class JournalSlice {
         getStudentsByGroupIdApi(group_id)
             .then(response => {
                 if (response?.data) {
-                    this.students_by_group = response.data
+                    this.students_by_group = sortBy(response.data, ['name'])
                 }
             })
             .catch((error) => {

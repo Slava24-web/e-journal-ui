@@ -58,7 +58,7 @@ export const ChartModal: React.FC<Props> = (props) => {
             onOk={handleOk}
             onCancel={handleCancel}
             footer={null}
-            width={900}
+            width={1000}
         >
             <ChatModalHeader>
                 {

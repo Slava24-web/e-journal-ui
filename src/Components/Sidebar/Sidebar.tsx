@@ -57,9 +57,9 @@ export const Sidebar: React.FC = () => {
           <Link to="/main/generator" />
         </Menu.Item>
 
-        <Menu.Item key="4" icon={<TeamOutlined />} title="Курсовые работы">
-          <Link to="/main/coursework" />
-        </Menu.Item>
+        {/*<Menu.Item key="4" icon={<TeamOutlined />} title="Курсовые работы">*/}
+        {/*  <Link to="/main/coursework" />*/}
+        {/*</Menu.Item>*/}
       </Menu>
     </Sider>
   );

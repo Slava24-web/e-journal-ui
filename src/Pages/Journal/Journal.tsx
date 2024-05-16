@@ -9,6 +9,7 @@ import EventSlice from '../../store/events/slice';
 import { IGroup, IMark, IStudent } from '../../store/journal/models';
 import { IEvent } from '../../store/events/models';
 import { padStart } from '@fullcalendar/core/internal';
+import sortBy from 'lodash/sortBy'
 
 type EditableTableProps = Parameters<typeof Table>[0];
 
@@ -20,12 +21,23 @@ export const getShortDate = (timestamp: number): string => {
     return `${padStart(new Date(timestamp).getDate(), 2)}.${padStart(new Date(timestamp).getMonth() + 1, 2)}`
 }
 
+const sortByShortDate = (lessonMarks: Record<string, string>) => {
+    const array = Object.entries(lessonMarks).map(([lesson, _]) => {
+        const [day, month] = lesson.split('.')
+        const dayNumber = Number.parseInt(day, 10)
+        const monthNumber = Number.parseInt(month, 10)
+
+        return { day: dayNumber, month: monthNumber }
+    })
+
+    return sortBy(array, ['day', 'month'])
+}
+
 export const Journal: React.FC = observer(() => {
     const searchEventId = new URLSearchParams(window.location.search).get('id')
-    const eventId = searchEventId ? Number(searchEventId) : null
+    const eventId = searchEventId ? Number.parseInt(searchEventId, 10) : null
 
-    const [currentGroup, setCurrentGroup] = useState<IGroup>()
-    const [currentEvent, setCurrentEvent] = useState<IEvent>()
+    console.log("eventId", eventId)
 
     /** Store */
     const storeEvents: IEvent[] = toJS(EventSlice.getCalendarEvents)
@@ -33,22 +45,35 @@ export const Journal: React.FC = observer(() => {
     const storeGroups: IGroup[] = toJS(JournalSlice.getGroups)
     const marks: Record<number, IMark[]> = toJS(JournalSlice.getMarksByEvent)
 
+    // const [currentGroup, setCurrentGroup] = useState<IGroup>()
+    // const [currentEvent, setCurrentEvent] = useState<IEvent>()
+
     const loading = !storeEvents || !studentsByGroup || !storeGroups || !marks
 
-    // Все события по текущей группе
-    const eventsByCurrentGroup = storeEvents.filter(({ group_id }) => group_id === currentGroup?.id)
+    // useEffect(() => {
+    //     if (eventId) {
+    //         setCurrentEvent(storeEvents.find(({ id }) => id === eventId))
+    //     }
+    // }, [eventId]);
+
+    const currentEvent = storeEvents.find(({ id }) => id === eventId)
+    const currentGroup = storeGroups.find(({ id }) => id === currentEvent?.group_id)
+
+    console.log("currentEvent", currentEvent)
+    console.log("currentGroup", currentGroup)
 
     useEffect(() => {
         if (eventId) {
-            const group_id = storeEvents.find(({ id }) => eventId)?.group_id
+            const group_id = storeEvents.find(({ id }) => eventId === id)?.group_id
             if (group_id) {
-                setCurrentGroup(storeGroups.find(({ id }) => id === group_id))
-                setCurrentEvent(storeEvents.find(({ id }) => id === eventId))
-
+                // setCurrentGroup(storeGroups.find(({ id }) => id === group_id))
                 JournalSlice.fetchStudentsByGroupId(group_id)
             }
         }
-    }, []);
+    }, [eventId]);
+
+    // Все события по текущей группе
+    const eventsByCurrentGroup = storeEvents.filter(({ group_id, discipline_id }) => group_id === currentGroup?.id && discipline_id === currentEvent?.discipline_id)
 
     useEffect(() => {
         if (currentGroup) {
@@ -61,17 +86,17 @@ export const Journal: React.FC = observer(() => {
 
             fetchMarks()
         }
-    }, [currentGroup]);
-
+    }, []);
 
     // Записи таблицы
     // @ts-ignore
     const studentsByGroupDataSource: DataType[] = studentsByGroup.map(({ id, name }) => {
-        const lessonMarks: Record<string, string> = eventsByCurrentGroup.reduce((result, event: IEvent) => {
-            return {
-                ...result,
-                [getShortDate(event.start_datetime)]: marks?.[event.id]?.find(({ event_id, student_id }: IMark) => event_id === event.id && student_id === id)?.mark
-            }
+        const lessonMarks: Record<string, string> = eventsByCurrentGroup?.reduce((result, event: IEvent) => {
+            console.log("marks[", event.id, '] ', marks?.[event.id])
+                return {
+                    ...result,
+                    [getShortDate(event.start_datetime)]: marks?.[event.id]?.find(({ event_id, student_id }: IMark) => event_id === event.id && student_id === id)?.mark
+                }
         }, {})
 
         return {
@@ -187,7 +212,7 @@ export const Journal: React.FC = observer(() => {
                 components={components}
                 rowClassName={() => 'editable-row'}
                 loading={loading}
-                title={() => <b>{`Группа ${currentGroup?.number}, курс ${currentGroup?.course}`}</b>}
+                // title={() => <b>{`Группа ${currentGroup?.number}, курс ${currentGroup?.course}`}</b>}
                 bordered
                 dataSource={studentsByGroupDataSource}
                 columns={columns as ColumnTypes}
