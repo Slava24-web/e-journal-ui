@@ -53,7 +53,7 @@ export const Sidebar: React.FC = () => {
           <Link to="/main/journal" />
         </Menu.Item>
 
-        <Menu.Item key="3" icon={<ExperimentOutlined />} title="Генератор заданий">
+        <Menu.Item key="3" icon={<ExperimentOutlined />} title="Подбор заданий">
           <Link to="/main/generator" />
         </Menu.Item>
 

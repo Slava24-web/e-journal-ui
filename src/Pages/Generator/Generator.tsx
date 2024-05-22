@@ -128,7 +128,7 @@ export const Generator = observer(() => {
 
     return (
         <div>
-            <Title level={5}>Генератор заданий</Title>
+            <Title level={5}>Подбор заданий</Title>
 
             <Form
                 form={form}
@@ -151,7 +151,7 @@ export const Generator = observer(() => {
                         style={{ marginTop: 15 }}
                     >
                         <Radio.Button value='control'>Контрольные</Radio.Button>
-                        <Radio.Button value='home'>Домашние</Radio.Button>
+                        <Radio.Button value='home'>Самостоятельные</Radio.Button>
                     </Radio.Group>
                 </Form.Item>
 

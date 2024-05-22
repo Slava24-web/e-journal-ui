@@ -5,7 +5,7 @@ const pathnameMap = new Map([
     ['main', 'Главная'],
     ['calendar', 'Календарь'],
     ['journal', 'Журнал'],
-    ['generator', 'Генератор заданий'],
+    ['generator', 'Подбор заданий'],
     ['coursework', 'Курсовые работы']
 ]);
 

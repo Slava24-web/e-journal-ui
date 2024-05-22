@@ -21,16 +21,8 @@ export const getShortDate = (timestamp: number): string => {
     return `${padStart(new Date(timestamp).getDate(), 2)}.${padStart(new Date(timestamp).getMonth() + 1, 2)}`
 }
 
-const sortByShortDate = (lessonMarks: Record<string, string>) => {
-    const array = Object.entries(lessonMarks).map(([lesson, _]) => {
-        const [day, month] = lesson.split('.')
-        const dayNumber = Number.parseInt(day, 10)
-        const monthNumber = Number.parseInt(month, 10)
-
-        return { day: dayNumber, month: monthNumber }
-    })
-
-    return sortBy(array, ['day', 'month'])
+const sortByDate = (array: IEvent[]): IEvent[] => {
+    return sortBy(array, ['start_datetime'])
 }
 
 export const Journal: React.FC = observer(() => {
@@ -91,13 +83,14 @@ export const Journal: React.FC = observer(() => {
     // Записи таблицы
     // @ts-ignore
     const studentsByGroupDataSource: DataType[] = studentsByGroup.map(({ id, name }) => {
-        const lessonMarks: Record<string, string> = eventsByCurrentGroup?.reduce((result, event: IEvent) => {
-            console.log("marks[", event.id, '] ', marks?.[event.id])
-                return {
-                    ...result,
-                    [getShortDate(event.start_datetime)]: marks?.[event.id]?.find(({ event_id, student_id }: IMark) => event_id === event.id && student_id === id)?.mark
-                }
+        const lessonMarks: Record<string, string> = sortByDate(eventsByCurrentGroup)?.reduce((result, event: IEvent) => {
+            return {
+                ...result,
+                [getShortDate(event.start_datetime)]: marks?.[event.id]?.find(({ event_id, student_id }: IMark) => event_id === event.id && student_id === id)?.mark
+            }
         }, {})
+
+        console.log("sortByDate(eventsByCurrentGroup)", sortByDate(eventsByCurrentGroup).map((event: IEvent) => getShortDate(event.start_datetime)))
 
         return {
             key: id,
@@ -121,7 +114,7 @@ export const Journal: React.FC = observer(() => {
             className: 'fio-column',
             sorter: (a, b) => a.name - b.name,
         },
-        ...eventsByCurrentGroup.map((event: IEvent) => ({
+        ...sortByDate(eventsByCurrentGroup).map((event: IEvent) => ({
             title: getShortDate(event.start_datetime),
             dataIndex: getShortDate(event.start_datetime),
             width: '20px !important',

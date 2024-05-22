@@ -14,17 +14,13 @@ type Props = {
 export const AbsentLineChart: React.FC<Props> = (props) => {
     const {
         eventsByCurrentGroup,
-        studentsByGroup,
-        currentEvent,
         marks,
     } = props
-
-    const allMarksByEvents = eventsByCurrentGroup.reduce((result: IMark[], event) => [...result, ...(marks[event.id] ?? [])], [])
 
     const data = eventsByCurrentGroup.map((event) => {
         return {
             date: getShortDate(event.start_datetime),
-            'Пропуски': allMarksByEvents.filter(({ mark, student_id }: IMark) => mark === 'н').length,
+            'Пропуски': marks[event.id]?.filter(({ mark, student_id }: IMark) => mark === 'н').length ?? 0,
         }
     })
 
