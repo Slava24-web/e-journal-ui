@@ -56,7 +56,7 @@ const App: React.FC = observer(() => {
         if (!isUserAuth && isAppReady) {
             navigate('/sign-in')
         }
-    }, [isUserAuth]);
+    }, [isUserAuth, isAppReady]);
 
     return (
         <>

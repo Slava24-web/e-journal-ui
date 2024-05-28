@@ -29,30 +29,16 @@ export const Journal: React.FC = observer(() => {
     const searchEventId = new URLSearchParams(window.location.search).get('id')
     const eventId = searchEventId ? Number.parseInt(searchEventId, 10) : null
 
-    console.log("eventId", eventId)
-
     /** Store */
     const storeEvents: IEvent[] = toJS(EventSlice.getCalendarEvents)
     const studentsByGroup: IStudent[] = toJS(JournalSlice.getStudentsByGroup)
     const storeGroups: IGroup[] = toJS(JournalSlice.getGroups)
     const marks: Record<number, IMark[]> = toJS(JournalSlice.getMarksByEvent)
 
-    // const [currentGroup, setCurrentGroup] = useState<IGroup>()
-    // const [currentEvent, setCurrentEvent] = useState<IEvent>()
-
     const loading = !storeEvents || !studentsByGroup || !storeGroups || !marks
-
-    // useEffect(() => {
-    //     if (eventId) {
-    //         setCurrentEvent(storeEvents.find(({ id }) => id === eventId))
-    //     }
-    // }, [eventId]);
 
     const currentEvent = storeEvents.find(({ id }) => id === eventId)
     const currentGroup = storeGroups.find(({ id }) => id === currentEvent?.group_id)
-
-    console.log("currentEvent", currentEvent)
-    console.log("currentGroup", currentGroup)
 
     useEffect(() => {
         if (eventId) {
@@ -90,7 +76,6 @@ export const Journal: React.FC = observer(() => {
             }
         }, {})
 
-        console.log("sortByDate(eventsByCurrentGroup)", sortByDate(eventsByCurrentGroup).map((event: IEvent) => getShortDate(event.start_datetime)))
 
         return {
             key: id,

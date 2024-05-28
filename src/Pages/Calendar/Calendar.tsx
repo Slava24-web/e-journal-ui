@@ -139,7 +139,7 @@ export const Calendar = observer(() => {
                 droppable
                 contentHeight={600}
                 eventContent={CustomView}
-                dayMaxEvents={8}
+                dayMaxEvents={6}
                 eventDrop={eventDrop}
             />
 

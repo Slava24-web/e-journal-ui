@@ -106,18 +106,6 @@ class EventSlice {
             })
     }
 
-    fetchGroupData(group_id: number) {
-
-    }
-
-    fetchSpecData(spec_id: number) {
-
-    }
-
-    fetchLevelData(level_type_id: number) {
-
-    }
-
     get getCalendarEvents(): IEvent[] {
         return this.events
     }
